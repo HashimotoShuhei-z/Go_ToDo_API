@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:13
+    # PostgreSQLコンテナの環境変数を設定
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    # ホストマシンのポート 5432 をコンテナのポート 5432 にマッピング
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+    ports:
+      - '8080:8080'
+    # web サービスが起動する前に db サービスを起動する必要があることを示す。
+    depends_on:
+      - db
+volumes:
+  db-data:
