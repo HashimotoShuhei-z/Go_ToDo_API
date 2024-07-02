@@ -9,8 +9,15 @@ services:
     # ホストマシンのポート 5432 をコンテナのポート 5432 にマッピング
     ports:
       - '5432:5432'
+    # ホストマシン上の名前付きボリューム db-data をPostgreSQLコンテナの /var/lib/postgresql/data ディレクトリにマウントする
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # コマンドシェルで　pg_isready コマンドを使用して、データベースが準備完了であることをチェック
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
@@ -22,8 +29,11 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - '8080:8080'
-    # web サービスが起動する前に db サービスを起動する必要があることを示す。
+    # web サービスは db サービスがヘルシーであると判断されるまで待機
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+# コンテナとホストマシン間でデータを共有するための設定
 volumes:
   db-data:
