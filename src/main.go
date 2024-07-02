@@ -37,11 +37,6 @@ func initDatabase() {
 }
 
 func main() {
-    // err := godotenv.Load()
-    // if err != nil {
-    //     log.Fatalf("Error loading .env file")
-    // }
-
     initDatabase()
     r := gin.Default()
 
