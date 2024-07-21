@@ -8,11 +8,9 @@ import (
     "os"
 )
 
-// TODO：envが読み込めていない
-
 // 構造体としてテーブル作成
-type Todo struct {
-    ID     uint   `json:"id" gorm:"primaryKey"` //JSONシリアル化時に、このフィールドが id として表現されることを指定
+type Task struct {
+    gorm.Model
     Title  string `json:"title"`
     Status string `json:"status"`
 }
@@ -33,57 +31,57 @@ func initDatabase() {
         panic("failed to connect database")
     }
 	// GORMの自動マイグレーション機能を使用。これにより、構造体のフィールドに対応するカラムがデータベーステーブルに自動的に反映
-    DB.AutoMigrate(&Todo{})
+    DB.AutoMigrate(&Task{})
 }
 
 func main() {
     initDatabase()
     r := gin.Default()
 
-    r.GET("/todos", getTodos)
-    r.POST("/todos", createTodo)
-    r.PUT("/todos/:id", updateTodo)
-    r.DELETE("/todos/:id", deleteTodo)
+    r.GET("/tasks", getTask)
+    r.POST("/tasks", createTask)
+    r.PUT("/tasks/:id", updateTask)
+    r.DELETE("/tasks/:id", deleteTask)
 
     r.Run(":8080")
 }
 
-func getTodos(c *gin.Context) {
-    var todos []Todo
-    DB.Find(&todos)
-    c.JSON(http.StatusOK, todos)
+func getTask(c *gin.Context) {
+    var task []Task
+    DB.Find(&task)
+    c.JSON(http.StatusOK, task)
 }
 
-func createTodo(c *gin.Context) {
-    var newTodo Todo
-    if err := c.BindJSON(&newTodo); err != nil {
+func createTask(c *gin.Context) {
+    var newTask Task
+    if err := c.BindJSON(&newTask); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    DB.Create(&newTodo)
-    c.JSON(http.StatusCreated, newTodo)
+    DB.Create(&newTask)
+    c.JSON(http.StatusCreated, newTask)
 }
 
-func updateTodo(c *gin.Context) {
-    var todo Todo
-    if err := DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+func updateTask(c *gin.Context) {
+    var task Task
+    if err := DB.Where("id = ?", c.Param("id")).First(&task).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
         return
     }
-    if err := c.BindJSON(&todo); err != nil {
+    if err := c.BindJSON(&task); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    DB.Save(&todo)
-    c.JSON(http.StatusOK, todo)
+    DB.Save(&task)
+    c.JSON(http.StatusOK, task)
 }
 
-func deleteTodo(c *gin.Context) {
-    var todo Todo
-    if err := DB.Where("id = ?", c.Param("id")).First(&todo).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+func deleteTask(c *gin.Context) {
+    var task Task
+    if err := DB.Where("id = ?", c.Param("id")).First(&task).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
         return
     }
-    DB.Delete(&todo)
-    c.JSON(http.StatusOK, gin.H{"message": "Todo deleted"})
+    DB.Delete(&task)
+    c.JSON(http.StatusOK, gin.H{"message": "Task deleted"})
 }
