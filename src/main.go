@@ -42,6 +42,7 @@ func main() {
     r.POST("/tasks", createTask)
     r.PUT("/tasks/:id", updateTask)
     r.DELETE("/tasks/:id", deleteTask)
+    r.GET("/tasks/:id", showTask)
 
     r.Run(":8080")
 }
@@ -84,4 +85,14 @@ func deleteTask(c *gin.Context) {
     }
     DB.Delete(&task)
     c.JSON(http.StatusOK, gin.H{"message": "Task deleted"})
+}
+
+func showTask(c *gin.Context) {
+    var task Task
+    if err := DB.Where("id = ?", c.Param("id")).First(&task).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"task": task})
 }
