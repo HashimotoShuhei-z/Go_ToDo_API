@@ -38,16 +38,17 @@ func main() {
     initDatabase()
     r := gin.Default()
 
-    r.GET("/tasks", getTask)
+    r.GET("/tasks", getTasks)
     r.POST("/tasks", createTask)
     r.PUT("/tasks/:id", updateTask)
     r.DELETE("/tasks/:id", deleteTask)
     r.GET("/tasks/:id", showTask)
+    r.GET("/tasks/status", getTasksByStatus)
 
     r.Run(":8080")
 }
 
-func getTask(c *gin.Context) {
+func getTasks(c *gin.Context) {
     var task []Task
     DB.Find(&task)
     c.JSON(http.StatusOK, task)
@@ -95,4 +96,17 @@ func showTask(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{"task": task})
+}
+
+//getTasksの中にまとめることもできそう。
+func getTasksByStatus(c *gin.Context) {
+    var tasks []Task
+    status := c.Query("status")
+
+    if err := DB.Where("status = ?", status).Find(&tasks).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"data": tasks})
 }
